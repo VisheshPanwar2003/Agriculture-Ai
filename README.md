@@ -1,7 +1,4 @@
-# 🌱 AgriSense AI – Smart Agriculture Assistant ## 
-
-[🚀 Live Demo](https://agrisense-ai.vercel.app) •
-
+# 🌱 AgriSense AI – Smart Agriculture Assistant ##  [🚀 Live Demo](https://agrisense-ai.vercel.app) •
 
 
 AgriSense AI is an AI-powered agriculture platform designed to help farmers make informed decisions through crop analysis, disease detection, weather insights, agricultural guidance, and intelligent chatbot support.
