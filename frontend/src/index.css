@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #02140f;
+  color: white;
+  font-family: Inter, sans-serif;
+}
+
+
+/* Hide all scrollbars */
+
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+* {
+  scrollbar-width: none;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill {
+
+  -webkit-text-fill-color: white;
+
+  -webkit-box-shadow:
+    0 0 0px 1000px #08251c inset;
+
+  transition:
+    background-color 5000s ease-in-out 0s;
+}
+
