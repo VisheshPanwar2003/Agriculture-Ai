@@ -20,8 +20,7 @@ AgriSense AI is a full-stack, AI-powered platform that helps farmers make inform
 
 | Crop Disease Analysis | AI Chatbot |
 | --- | --- |
-| ![Disease analysis]([docs/screenshot-vision.png](https://github.com/VisheshPanwar2003/Agriculture-Ai/blob/main/Docs/screenshot-chat.png)) | ![Chatbot](docs/screenshot-chat.png) |
-| ![Disease analysis]() | ![Chatbot](docs/screenshot-chat.png) |
+| ![Disease analysis](docs/screenshot-vision.png) | ![Chatbot](docs/screenshot-chat.png) |
 
 | Weather Insights | Dashboard |
 | --- | --- |
