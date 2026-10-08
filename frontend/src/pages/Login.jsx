@@ -9,10 +9,12 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "../services/i18n";
 
 export default function Login() {
 
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [email, setEmail] =
     useState("");
@@ -66,7 +68,7 @@ export default function Login() {
         error.response?.data?.detail ||
         error.response?.data?.error ||
         (error.request
-          ? "Could not reach the server. Check that the backend is running and try again."
+          ? t("Could not reach the server. Check that the backend is running and try again.")
           : error.message) ||
         "Login failed"
       );
@@ -80,12 +82,13 @@ export default function Login() {
   return (
     <div
       className="
-      min-h-screen
-      bg-[#03120d]
+      min-h-[100dvh]
+      bg-[#07130f]
       flex
       items-center
       justify-center
-      px-6
+      px-4
+      py-8
       "
     >
 
@@ -93,12 +96,13 @@ export default function Login() {
         className="
         w-full
         max-w-md
-        bg-[#051a14]
+        bg-[#0b1b13]
         border
-        border-green-900
+        border-white/[0.08]
         rounded-3xl
-        p-8
+        p-5
         shadow-2xl
+        sm:p-8
         "
       >
 
@@ -109,8 +113,8 @@ export default function Login() {
             className="
             w-20
             h-20
-            rounded-3xl
-            bg-green-700/20
+              rounded-2xl
+              bg-emerald-300
             flex
             items-center
             justify-center
@@ -120,16 +124,16 @@ export default function Login() {
 
             <Leaf
               size={40}
-              className="text-green-400"
+              className="text-[#092016]"
             />
           </div>
 
-          <h1 className="text-4xl font-bold mt-6 text-white">
-            Welcome Back
+          <h1 className="mt-6 text-3xl font-bold text-white sm:text-4xl">
+            {t("Welcome Back")}
           </h1>
 
           <p className="text-gray-400 mt-3">
-            Login to AgriSense AI
+            {t("Login to AgriSense AI")}
           </p>
         </div>
 
@@ -161,7 +165,7 @@ export default function Login() {
           <div>
 
             <p className="text-sm text-gray-400 mb-2">
-              Email Address
+              {t("Email Address")}
             </p>
 
             <div
@@ -193,7 +197,7 @@ export default function Login() {
                     e.target.value
                   )
                 }
-                placeholder="Enter your email"
+                placeholder={t("Enter your email")}
                 className="
                 bg-transparent
                 outline-none
@@ -209,7 +213,7 @@ export default function Login() {
           <div>
 
             <p className="text-sm text-gray-400 mb-2">
-              Password
+              {t("Password")}
             </p>
 
             <div
@@ -241,7 +245,7 @@ export default function Login() {
                     e.target.value
                   )
                 }
-                placeholder="Enter your password"
+                placeholder={t("Enter your password")}
                 className="
                 bg-transparent
                 outline-none
@@ -273,8 +277,8 @@ export default function Login() {
 
             {
               loading
-                ? "Logging in..."
-                : "Login"
+                ? t("Logging in...")
+                : t("Login")
             }
           </button>
 
@@ -283,7 +287,7 @@ export default function Login() {
 
             <p className="text-gray-400">
 
-              Don’t have an account?
+              {t("Don’t have an account?")}
 
               <span
                 onClick={() =>
@@ -296,7 +300,7 @@ export default function Login() {
                 hover:underline
                 "
               >
-                Sign Up
+                {t("Sign Up")}
               </span>
             </p>
           </div>

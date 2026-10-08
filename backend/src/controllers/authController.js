@@ -65,6 +65,7 @@ exports.signup =
           {
             user_id:
               user._id.toString(),
+            token_version: user.tokenVersion || 0,
           },
           process.env.JWT_SECRET,
           {
@@ -151,6 +152,7 @@ exports.login =
           {
             user_id:
               user._id.toString(),
+            token_version: user.tokenVersion || 0,
           },
           process.env.JWT_SECRET,
           {
@@ -175,5 +177,68 @@ exports.login =
 
       console.error("Login error:", err.message);
       res.status(500).json({ error: "Unable to log in" });
+    }
+  };
+
+exports.changePassword =
+  async (req, res) => {
+    try {
+      const currentPassword = typeof req.body?.currentPassword === "string"
+        ? req.body.currentPassword
+        : "";
+      const newPassword = typeof req.body?.newPassword === "string"
+        ? req.body.newPassword
+        : "";
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({
+          detail: "Current password and new password are required",
+        });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({
+          detail: "New password must be at least 8 characters",
+        });
+      }
+
+      const user = await User.findById(req.user.user_id);
+      if (!user) {
+        return res.status(404).json({ detail: "Account not found" });
+      }
+
+      const isCurrentPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.password
+      );
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ detail: "Current password is incorrect" });
+      }
+
+      const isSamePassword = await bcrypt.compare(newPassword, user.password);
+      if (isSamePassword) {
+        return res.status(400).json({ detail: "Choose a password different from your current one" });
+      }
+
+      user.password = await bcrypt.hash(newPassword, 10);
+      user.tokenVersion = (user.tokenVersion || 0) + 1;
+      await user.save();
+
+      const token = jwt.sign(
+        {
+          user_id: user._id.toString(),
+          token_version: user.tokenVersion,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      return res.json({
+        detail: "Password changed successfully. Other devices have been signed out.",
+        token,
+      });
+    } catch (err) {
+      console.error("Change password error:", err.message);
+      return res.status(500).json({ error: "Unable to change password" });
     }
   };

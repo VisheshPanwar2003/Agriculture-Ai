@@ -1,34 +1,35 @@
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 
-import {
-  Outlet,
-} from "react-router-dom";
-
 export default function MainLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
+    <div className="app-shell flex min-h-dvh bg-[#07130f] text-white md:h-dvh md:min-h-0 md:overflow-hidden">
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation menu"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-    <div className="flex h-screen bg-[#02140f] text-white">
+      <Sidebar
+        isOpen={sidebarOpen}
+        onNavigate={() => setSidebarOpen(false)}
+      />
 
-      {/* SIDEBAR */}
-      <Sidebar />
-
-      {/* MAIN CONTENT */}
-      <div className="flex-1 flex flex-col">
-
-        {/* TOPBAR */}
-        <Topbar />
-
-        {/* PAGE CONTENT */}
-        <main className="flex-1 p-6 overflow-auto">
-
-          <Outlet />
-
+      <div className="flex min-h-dvh min-w-0 flex-1 flex-col md:min-h-0">
+        <Topbar onMenuClick={() => setSidebarOpen((open) => !open)} />
+        <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
+          <div className="mx-auto w-full max-w-[1600px]">
+            <Outlet />
+          </div>
         </main>
-
       </div>
-
     </div>
   );
 }

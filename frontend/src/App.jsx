@@ -15,6 +15,9 @@ const VisionAnalysis = lazy(() => import("./pages/Vision"));
 const Almanac = lazy(() => import("./pages/Almanac"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Market = lazy(() => import("./pages/Market"));
+const Schemes = lazy(() => import("./pages/Schemes"));
 
 function App() {
 
@@ -70,6 +73,14 @@ function App() {
         <Route
           path="almanac"
           element={<Almanac />}
+        />
+
+        <Route path="market" element={<Market />} />
+        <Route path="schemes" element={<Schemes />} />
+
+        <Route
+          path="settings"
+          element={<Settings />}
         />
 
       </Route>

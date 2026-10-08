@@ -6,15 +6,20 @@ import {
   Droplets,
   Wind,
   Loader2,
+  MapPin,
 } from "lucide-react";
 
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 import api from "../services/api";
+import { useTranslation } from "../services/i18n";
 
 export default function WeatherCard({
   city = "Delhi",
+  onSettingsClick = () => {},
 }) {
+  const { t } = useTranslation();
 
   const [weather, setWeather] =
     useState(null);
@@ -39,16 +44,24 @@ export default function WeatherCard({
           setError(null);
         }
       })
-      .catch(() => {
+      .catch((requestError) => {
         if (active) {
-          setError({ city, message: "Unable to load weather" });
+          const isInvalidCity = requestError.response?.status === 404 ||
+            requestError.response?.data?.code === "CITY_NOT_FOUND";
+          setError({
+            city,
+            invalidCity: isInvalidCity,
+            message: isInvalidCity
+              ? t("Please enter the city correctly in Settings.")
+              : t("Weather is temporarily unavailable. Please try again."),
+          });
         }
       });
 
     return () => {
       active = false;
     };
-  }, [city, fetchWeather]);
+  }, [city, fetchWeather, t]);
 
   const currentError = error?.city === city ? error.message : "";
 
@@ -116,7 +129,7 @@ export default function WeatherCard({
         font-semibold
         "
       >
-        Weather
+        {t("Weather")}
       </p>
 
       {/* CARD */}
@@ -150,8 +163,16 @@ export default function WeatherCard({
 
         ) : currentError ? (
 
-          <div className="text-red-400 text-sm">
-            {currentError}
+          <div role="alert" className="rounded-xl border border-amber-300/15 bg-amber-300/[0.06] p-3">
+            <div className="flex items-start gap-2 text-sm leading-relaxed text-amber-100">
+              <MapPin size={16} className="mt-0.5 shrink-0 text-amber-300" />
+              <span>{currentError}</span>
+            </div>
+            {error?.city === city && error.invalidCity && (
+              <Link to="/settings" onClick={onSettingsClick} className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-amber-300 px-3 py-2 text-xs font-semibold text-[#17200f] transition hover:bg-amber-200">
+                {t("Correct location")}
+              </Link>
+            )}
           </div>
 
         ) : (
@@ -193,7 +214,7 @@ export default function WeatherCard({
                   capitalize
                   "
                 >
-                  {weather.weather}
+                  {t(weather.weather)}
                 </p>
 
                 <p
@@ -231,7 +252,7 @@ export default function WeatherCard({
                     className="text-cyan-400"
                   />
 
-                  <span>Humidity</span>
+                  <span>{t("Humidity")}</span>
                 </div>
 
                 <span className="font-medium">
@@ -260,7 +281,7 @@ export default function WeatherCard({
                     className="text-blue-400"
                   />
 
-                  <span>Wind Speed</span>
+                  <span>{t("Wind Speed")}</span>
                 </div>
 
                 <span className="font-medium">
@@ -289,11 +310,11 @@ export default function WeatherCard({
                     className="text-green-400"
                   />
 
-                  <span>Condition</span>
+                  <span>{t("Condition")}</span>
                 </div>
 
                 <span className="font-medium capitalize">
-                  {weather.weather}
+                  {t(weather.weather)}
                 </span>
               </div>
             </div>

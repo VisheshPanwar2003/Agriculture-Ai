@@ -29,8 +29,9 @@ exports.saveMessage =
       {
         $push: {
           messages: {
-            role,
-            content,
+            $each: [{ role, content }],
+            // Keep chat documents comfortably below MongoDB's document limit.
+            $slice: -100,
           },
         },
 
@@ -42,17 +43,43 @@ exports.saveMessage =
 
 exports.getChatHistory =
   async (
-    userId
+    userId,
+    { offset = 0, limit = 25 } = {}
   ) => {
 
-    return Chat.find({
+    const filter = {
       user_id: userId,
       "messages.0": {
         $exists: true,
       },
-    }).sort({
-      updated_at: -1,
-    });
+    };
+
+    const [chats, total] = await Promise.all([
+      Chat.aggregate([
+        { $match: filter },
+        { $sort: { updated_at: -1, _id: -1 } },
+        { $skip: offset },
+        { $limit: limit },
+        {
+          $project: {
+            user_id: 1,
+            updated_at: 1,
+            created_at: 1,
+            messages: { $slice: ["$messages", 1] },
+            messageCount: { $size: "$messages" },
+          },
+        },
+      ]),
+      Chat.countDocuments(filter),
+    ]);
+
+    return {
+      chats,
+      total,
+      offset,
+      limit,
+      hasMore: offset + chats.length < total,
+    };
   };
 
 exports.getChatById =

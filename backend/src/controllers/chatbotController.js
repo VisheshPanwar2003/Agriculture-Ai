@@ -1,5 +1,6 @@
 const chatbot =
   require("../services/chatbotService");
+const { normalizeResponseLanguage } = require("../utils/responseLanguage");
 
 const {
   createChat,
@@ -59,7 +60,8 @@ exports.chat =
     const response =
       await chatbot.chat(
         message,
-        chat.messages
+        chat.messages,
+        normalizeResponseLanguage(req.body.language)
       );
 
     await saveMessage(
@@ -77,9 +79,17 @@ exports.chat =
 exports.history =
   async (req, res) => {
 
+    const requestedOffset = Number.parseInt(req.query.offset, 10);
+    const requestedLimit = Number.parseInt(req.query.limit, 10);
+    const offset = Number.isFinite(requestedOffset) ? Math.max(0, requestedOffset) : 0;
+    const limit = Number.isFinite(requestedLimit)
+      ? Math.min(50, Math.max(1, requestedLimit))
+      : 25;
+
     const chats =
       await getChatHistory(
-        req.user.user_id
+        req.user.user_id,
+        { offset, limit }
       );
 
     res.json(chats);

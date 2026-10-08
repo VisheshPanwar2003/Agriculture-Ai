@@ -1,7 +1,8 @@
 const jwt =
   require("jsonwebtoken");
+const User = require("../models/User");
 
-module.exports = (
+module.exports = async (
   req,
   res,
   next
@@ -34,6 +35,11 @@ module.exports = (
         token,
         process.env.JWT_SECRET
       );
+
+    const user = await User.findById(decoded.user_id).select("tokenVersion");
+    if (!user || (decoded.token_version || 0) !== (user.tokenVersion || 0)) {
+      return res.status(401).json({ detail: "Session expired. Please sign in again." });
+    }
 
     req.user = decoded;
 

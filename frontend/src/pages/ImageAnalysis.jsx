@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { getPreferences } from "../services/preferences";
+import { useTranslation } from "../services/i18n";
 
 import {
   Upload,
@@ -10,6 +12,7 @@ import {
 } from "lucide-react";
 
 export default function ImageAnalysis() {
+  const { t } = useTranslation();
 
   const [image, setImage] = useState(null);
 
@@ -35,7 +38,7 @@ export default function ImageAnalysis() {
 
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      setError("Choose a JPG, PNG, or WEBP image.");
+      setError(t("Choose a JPG, PNG, or WEBP image."));
       e.target.value = "";
       return;
     }
@@ -66,6 +69,7 @@ export default function ImageAnalysis() {
 
       formData.append("file", imageFile);
       formData.append("analysisType", analysisType);
+      formData.append("language", getPreferences().language);
 
       const response = await api.post(
         "/analysis/predict",
@@ -77,7 +81,7 @@ export default function ImageAnalysis() {
 
     } catch (error) {
 
-      setError(error.response?.data?.error || "Unable to analyze this image.");
+      setError(t(error.response?.data?.error || "Unable to analyze this image."));
 
     } finally {
 
@@ -86,17 +90,19 @@ export default function ImageAnalysis() {
   };
 
   return (
-    <div className="grid grid-cols-12 gap-6 h-full min-h-0">
+    <div className="grid min-h-full grid-cols-1 gap-4 lg:h-full lg:min-h-0 lg:grid-cols-12 lg:gap-6">
 
       {/* LEFT PANEL */}
       <div
         className="
-        col-span-4
+        col-span-1
+        lg:col-span-4
         bg-[#051a14]
         border
         border-green-900
         rounded-2xl
-        p-5
+        p-4
+        sm:p-5
         flex
         flex-col
         "
@@ -106,7 +112,7 @@ export default function ImageAnalysis() {
         <div>
 
           <h2 className="text-green-400 font-semibold mb-3">
-            1. Select Analysis Type
+            {t("1. Select Analysis Type")}
           </h2>
 
           <div className="relative">
@@ -130,15 +136,15 @@ export default function ImageAnalysis() {
               "
             >
               <option value="crop">
-                Crop / Fruit
+                {t("Crop / Fruit")}
               </option>
 
               <option value="leaf">
-                Leaf Disease
+                {t("Leaf Disease")}
               </option>
 
               <option value="plant">
-                Plant Health
+                {t("Plant Health")}
               </option>
             </select>
 
@@ -174,8 +180,7 @@ export default function ImageAnalysis() {
             />
 
             <p className="text-sm text-gray-300 leading-relaxed">
-              Analyze crop or fruit images to detect
-              disease and get AI recommendations.
+              {t("Analyze crop or fruit images to detect disease and get AI recommendations.")}
             </p>
           </div>
         </div>
@@ -184,7 +189,7 @@ export default function ImageAnalysis() {
         <div className="mt-6 flex-1 flex flex-col">
 
           <h2 className="text-green-400 font-semibold mb-3">
-            2. Upload Image
+            {t("2. Upload Image")}
           </h2>
 
           <label
@@ -246,7 +251,7 @@ export default function ImageAnalysis() {
                     text-white
                     "
                   >
-                    Replace Image
+                  {t("Replace Image")}
                   </div>
                 </div>
               </>
@@ -259,19 +264,19 @@ export default function ImageAnalysis() {
                 />
 
                 <p className="font-medium">
-                  Upload Crop Image
+                  {t("Upload Crop Image")}
                 </p>
 
                 <p className="text-sm text-gray-400 mt-2">
-                  Drag & drop image here
+                  {t("Drag & drop image here")}
                 </p>
 
                 <p className="text-sm text-gray-400">
-                  or click to browse
+                  {t("or click to browse")}
                 </p>
 
                 <p className="text-xs text-gray-500 mt-4">
-                  JPG, PNG, WEBP up to 10MB
+                  {t("JPG, PNG, WEBP up to 10MB")}
                 </p>
               </div>
             )}
@@ -284,7 +289,7 @@ export default function ImageAnalysis() {
             />
           </label>
 
-          {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+          {error && <p className="mt-3 text-sm text-red-400">{t(error)}</p>}
         </div>
 
         {/* BUTTON */}
@@ -313,8 +318,8 @@ export default function ImageAnalysis() {
 
           {
             loading
-              ? "Analyzing..."
-              : "Analyze Image"
+              ? t("Analyzing...")
+              : t("Analyze Image")
           }
         </button>
       </div>
@@ -322,12 +327,15 @@ export default function ImageAnalysis() {
       {/* RIGHT PANEL */}
       <div
         className="
-        col-span-8
+        col-span-1
+        min-h-[460px]
+        lg:col-span-8
         bg-[#051a14]
         border
         border-green-900
         rounded-2xl
-        p-5
+        p-4
+        sm:p-5
         flex
         flex-col
         h-full
@@ -353,7 +361,7 @@ export default function ImageAnalysis() {
           />
 
           <h2 className="text-green-400 font-semibold">
-            Analysis Results
+            {t("Analysis Results")}
           </h2>
         </div>
 
@@ -380,7 +388,8 @@ export default function ImageAnalysis() {
                   border
                   border-green-900
                   rounded-3xl
-                  p-8
+                  p-4
+                  sm:p-6
                   "
                 >
 
@@ -391,11 +400,11 @@ export default function ImageAnalysis() {
                     <div>
 
                       <p className="text-gray-400 text-sm mb-3">
-                        AI Detection Result
+                        {t("AI Detection Result")}
                       </p>
 
                       <h1 className="text-6xl font-bold text-green-400 leading-none">
-                        {result.status}
+                        {t(result.status)}
                       </h1>
 
                       <div className="flex gap-4 mt-6">
@@ -412,7 +421,7 @@ export default function ImageAnalysis() {
                           "
                         >
                           <p className="text-xs text-gray-400">
-                            Crop Type
+                            {t("Crop Type")}
                           </p>
 
                           <p className="mt-1 font-medium text-xl">
@@ -432,7 +441,7 @@ export default function ImageAnalysis() {
                           "
                         >
                           <p className="text-xs text-gray-400">
-                            Issues Found
+                            {t("Issues Found")}
                           </p>
 
                           <p className="mt-1 font-medium text-xl">
@@ -469,7 +478,7 @@ export default function ImageAnalysis() {
                       </h2>
 
                       <p className="text-gray-400 text-sm mt-2">
-                        Confidence
+                        {t("Confidence")}
                       </p>
                     </div>
                   </div>
@@ -488,8 +497,8 @@ export default function ImageAnalysis() {
                     "
                   >
 
-                    <h2 className="text-4xl font-bold mb-6">
-                      AI Recommendations
+                    <h2 className="mb-6 text-2xl font-bold sm:text-4xl">
+                      {t("AI Recommendations")}
                     </h2>
 
                     {/* RECOMMENDATION LIST */}
@@ -526,7 +535,7 @@ export default function ImageAnalysis() {
 
                               {/* TEXT */}
                               <p className="text-gray-300 leading-relaxed text-lg">
-                                {item}
+                                {t(item)}
                               </p>
                             </div>
                           )
@@ -539,7 +548,7 @@ export default function ImageAnalysis() {
                     <div className="mt-8">
 
                       <h3 className="text-2xl font-semibold mb-4">
-                        Health Status
+                        {t("Health Status")}
                       </h3>
 
                       <div
@@ -560,7 +569,7 @@ export default function ImageAnalysis() {
                         }
                         `}
                       >
-                        {result.status}
+                        {t(result.status)}
                       </div>
                     </div>
                   </div>
@@ -595,18 +604,18 @@ export default function ImageAnalysis() {
                   </div>
 
                   <h2 className="mt-6 text-2xl font-semibold">
-                    No analysis yet
+                    {t("No analysis yet")}
                   </h2>
 
                   <p className="text-gray-400 mt-3 leading-relaxed">
-                    Upload an image and click
+                    {t("Upload an image and click")}
                     <span className="text-green-400">
-                      {" "}“Analyze Image”
+                      {" "}“{t("Analyze Image")}”
                     </span>
 
                     <br />
 
-                    to see results here.
+                    {t("to see results here.")}
                   </p>
                 </div>
               </div>

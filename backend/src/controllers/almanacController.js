@@ -3,6 +3,7 @@ const FarmersAlmanac =
 
 const almanac =
   new FarmersAlmanac();
+const { normalizeResponseLanguage } = require("../utils/responseLanguage");
 
 exports.getDailyAlmanac = (
   req,
@@ -34,7 +35,8 @@ exports.getCropAIData = async (
     req.params;
 
   const cropData = await almanac.getCropAIData(
-    crop_name
+    crop_name,
+    normalizeResponseLanguage(req.query.language)
   );
 
   res.json(cropData);

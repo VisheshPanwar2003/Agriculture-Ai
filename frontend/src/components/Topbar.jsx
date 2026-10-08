@@ -1,342 +1,112 @@
 import { useState } from "react";
+import { ChevronDown, Leaf, LogOut, Menu, Settings2, UserRound } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "../services/i18n";
 
-import {
-  Bell,
-  ChevronDown,
-  LogOut,
-  User,
-} from "lucide-react";
+const pageConfig = {
+  "/": { title: "Crop analysis", subtitle: "Turn a field photo into practical next steps." },
+  "/chatbot": { title: "AI assistant", subtitle: "Get clear answers for your day-to-day farming." },
+  "/vision": { title: "Plant vision", subtitle: "Explore crop health with an image and a question." },
+  "/almanac": { title: "Farm almanac", subtitle: "Plan the season with crop and planting insights." },
+  "/settings": { title: "Settings", subtitle: "Manage your location and AI response preferences." },
+};
 
-import { useLocation } from "react-router-dom";
-
-export default function Topbar() {
-
-  const [open, setOpen] =
-    useState(false);
-
-  const location =
-    useLocation();
-
-  // GET USER
+export default function Topbar({ onMenuClick = () => {} }) {
+  const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
   let user = null;
+
   try {
     user = JSON.parse(localStorage.getItem("user") || "null");
   } catch {
     localStorage.removeItem("user");
   }
 
-  // PAGE CONFIG
-  const pageConfig = {
-
-    "/": {
-
-      title:
-        "Crop Analysis",
-
-      subtitle:
-        "Upload image or ask AI"
-    },
-
-    "/chatbot": {
-
-      title:
-        "AI Chatbot",
-
-      subtitle:
-        "Talk with AgriSense AI assistant"
-    },
-
-    "/vision": {
-
-      title:
-        "Vision AI",
-
-      subtitle:
-        "Analyze crops using AI vision"
-    },
-
-    "/almanac": {
-
-      title:
-        "Farmer Almanac",
-
-      subtitle:
-        "Smart seasonal farming insights"
-    }
+  const currentPage = pageConfig[location.pathname] || {
+    title: "AgriSense AI",
+    subtitle: "Your field intelligence workspace.",
   };
 
-  const currentPage =
-    pageConfig[
-      location.pathname
-    ] || {
+  const initials = user?.name
+    ?.trim()
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2) || "U";
 
-      title:
-        "AgriSense AI",
-
-      subtitle:
-        "Smart Agriculture Platform"
-    };
-
-  // LOGOUT
   const logout = () => {
-
-    localStorage.removeItem(
-      "token"
-    );
-
-    localStorage.removeItem(
-      "user"
-    );
-
-    window.location.href =
-      "/login";
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login", { replace: true });
   };
 
   return (
-    <div
-      className="
-      h-[80px]
-      bg-[#041a14]
-      px-8
-      flex
-      items-center
-      justify-between
-      border-b
-      border-green-900
-      "
-    >
-
-      {/* LEFT */}
-      <div>
-
-        <h1 className="text-3xl font-bold">
-          {
-            currentPage.title
-          }
-        </h1>
-
-        <p className="text-gray-400 text-sm mt-1">
-          {
-            currentPage.subtitle
-          }
-        </p>
-      </div>
-
-      {/* RIGHT */}
-      <div className="flex items-center gap-6">
-
-        {/* NOTIFICATION */}
-        <div
-          className="
-          w-11
-          h-11
-          rounded-xl
-          bg-[#0a241c]
-          border
-          border-green-900
-          flex
-          items-center
-          justify-center
-          cursor-pointer
-          hover:bg-[#103126]
-          transition-all
-          "
+    <header className="sticky top-0 z-30 flex min-h-[76px] items-center justify-between gap-3 border-b border-white/[0.07] bg-[#091711]/95 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8">
+      <div className="flex min-w-0 items-center gap-3">
+        <button
+          type="button"
+          aria-label="Open navigation menu"
+          onClick={onMenuClick}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 transition hover:bg-white/[0.08] hover:text-white md:hidden"
         >
-
-          <Bell size={18} />
-        </div>
-
-        {/* PROFILE */}
-        <div className="relative">
-
-          <div
-            onClick={() =>
-              setOpen(!open)
-            }
-            className="
-            flex
-            items-center
-            gap-3
-            bg-[#0a241c]
-            border
-            border-green-900
-            px-4
-            py-2
-            rounded-2xl
-            cursor-pointer
-            hover:bg-[#103126]
-            transition-all
-            "
-          >
-
-            {/* INITIALS */}
-            <div
-              className="
-              w-11
-              h-11
-              rounded-full
-              bg-green-700
-              flex
-              items-center
-              justify-center
-              text-white
-              font-semibold
-              text-sm
-              uppercase
-              "
-            >
-
-              {
-                user?.name
-                  ?.split(" ")
-                  ?.map(
-                    (word) => word[0]
-                  )
-                  ?.join("")
-                  ?.slice(0, 2)
-                || "U"
-              }
-
-            </div>
-
-            {/* USER INFO */}
-            <div>
-
-              <p className="font-medium">
-                {
-                  user?.name ||
-                  "User"
-                }
-              </p>
-
-              <p
-                className="
-                text-xs
-                text-gray-400
-                "
-              >
-                {
-                  user?.email ||
-                  "user@email.com"
-                }
-              </p>
-            </div>
-
-            <ChevronDown
-              size={18}
-              className={`
-                transition-all
-                ${
-                  open
-                    ? "rotate-180"
-                    : ""
-                }
-              `}
-            />
+          <Menu size={20} />
+        </button>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="hidden text-emerald-300 sm:inline-flex"><Leaf size={15} /></span>
+          <h1 className="truncate text-lg font-semibold tracking-tight text-white sm:text-xl">{t(currentPage.title)}</h1>
           </div>
-
-          {/* DROPDOWN */}
-          {
-            open && (
-
-              <div
-                className="
-                absolute
-                right-0
-                mt-3
-                w-[240px]
-                bg-[#071f18]
-                border
-                border-green-900
-                rounded-2xl
-                overflow-hidden
-                shadow-2xl
-                z-50
-                "
-              >
-
-                {/* USER HEADER */}
-                <div
-                  className="
-                  p-4
-                  border-b
-                  border-green-900
-                  "
-                >
-
-                  <div className="flex items-center gap-3">
-
-                    <div
-                      className="
-                      w-12
-                      h-12
-                      rounded-full
-                      bg-green-700/20
-                      flex
-                      items-center
-                      justify-center
-                      "
-                    >
-
-                      <User
-                        size={22}
-                        className="text-green-400"
-                      />
-                    </div>
-
-                    <div>
-
-                      <p className="font-medium">
-                        {
-                          user?.name
-                        }
-                      </p>
-
-                      <p
-                        className="
-                        text-xs
-                        text-gray-400
-                        mt-1
-                        "
-                      >
-                        {
-                          user?.email
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* LOGOUT */}
-                <button
-                  onClick={logout}
-                  className="
-                  w-full
-                  flex
-                  items-center
-                  gap-3
-                  px-5
-                  py-4
-                  hover:bg-[#103126]
-                  transition-all
-                  text-left
-                  "
-                >
-
-                  <LogOut
-                    size={18}
-                    className="text-red-400"
-                  />
-
-                  <span className="text-red-400">
-                    Logout
-                  </span>
-                </button>
-              </div>
-            )
-          }
+          <p className="mt-0.5 hidden truncate text-xs text-slate-400 sm:block">{t(currentPage.subtitle)}</p>
         </div>
       </div>
-    </div>
+
+      <div className="relative shrink-0">
+        <button
+          type="button"
+          aria-label="Open account menu"
+          aria-expanded={open}
+          onClick={() => setOpen((value) => !value)}
+          className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] p-1.5 pr-2.5 text-left transition hover:border-emerald-300/20 hover:bg-white/[0.07] sm:gap-3 sm:pr-3"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-300 text-sm font-semibold text-[#092016]">{initials}</span>
+          <span className="hidden min-w-0 sm:block">
+            <span className="block max-w-32 truncate text-xs font-medium text-slate-100">{user?.name || "Your account"}</span>
+            <span className="mt-0.5 block max-w-36 truncate text-[10px] text-slate-500">{user?.email || "Profile settings"}</span>
+          </span>
+          <ChevronDown size={15} className={`text-slate-400 transition ${open ? "rotate-180" : ""}`} />
+        </button>
+
+        {open && (
+          <>
+            <button type="button" aria-label="Close account menu" className="fixed inset-0 z-40 cursor-default" onClick={() => setOpen(false)} />
+            <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-white/10 bg-[#102219] p-1.5 shadow-2xl shadow-black/40">
+              <div className="flex items-center gap-3 px-3 py-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/[0.06] text-emerald-300"><UserRound size={17} /></span>
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-medium text-white">{user?.name || "Your account"}</p>
+                  <p className="truncate text-[10px] text-slate-400">{user?.email || ""}</p>
+                </div>
+              </div>
+              <div className="my-1 border-t border-white/[0.07]" />
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  navigate("/settings");
+                }}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-xs font-medium text-slate-200 transition hover:bg-white/[0.06]"
+              >
+                <Settings2 size={15} className="text-emerald-300" /> {t("Settings")}
+              </button>
+              <button type="button" onClick={logout} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-xs font-medium text-rose-300 transition hover:bg-rose-400/10">
+                <LogOut size={15} /> {t("Sign out")}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </header>
   );
 }

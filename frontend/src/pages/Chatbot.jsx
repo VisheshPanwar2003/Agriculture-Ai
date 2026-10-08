@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 
 import api from "../services/api";
+import { getPreferences } from "../services/preferences";
+import { useTranslation } from "../services/i18n";
 
 import ReactMarkdown from "react-markdown";
 
@@ -13,6 +15,7 @@ import {
 } from "lucide-react";
 
 export default function Chatbot() {
+  const { t } = useTranslation();
 
   const [message, setMessage] =
     useState("");
@@ -25,6 +28,10 @@ export default function Chatbot() {
 
   const [chatHistory, setChatHistory] =
     useState([]);
+
+  const [historyOffset, setHistoryOffset] = useState(0);
+  const [historyHasMore, setHistoryHasMore] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   const [chatId, setChatId] =
     useState(null);
@@ -64,7 +71,7 @@ export default function Chatbot() {
 
   const initializeChat = useCallback(async () => {
     const historyRes = await api.get(
-      "/chatbot/history",
+      "/chatbot/history?offset=0&limit=25",
       authHeaders
     );
     return historyRes.data;
@@ -76,13 +83,15 @@ export default function Chatbot() {
     initializeChat()
       .then((history) => {
         if (!active) return;
-        setChatHistory(history);
+        setChatHistory(history.chats || []);
+        setHistoryOffset(history.offset || 0);
+        setHistoryHasMore(Boolean(history.hasMore));
         setChatId(null);
         setMessages([
           {
             role: "assistant",
             content:
-              "# Hello 👋\nI am **AgriSense AI**. Ask me anything about crops, diseases, fertilizers, irrigation, or farming.",
+              t("# Hello 👋\nI am **AgriSense AI**. Ask me anything about crops, diseases, fertilizers, irrigation, or farming."),
           },
         ]);
       })
@@ -91,7 +100,7 @@ export default function Chatbot() {
     return () => {
       active = false;
     };
-  }, [initializeChat]);
+  }, [initializeChat, t]);
 
   // SEND MESSAGE
 
@@ -147,6 +156,7 @@ export default function Chatbot() {
 
             message:
               currentMessage,
+            language: getPreferences().language,
           },
 
           authHeaders
@@ -169,14 +179,14 @@ export default function Chatbot() {
       const historyRes =
         await api.get(
 
-          "/chatbot/history",
+          "/chatbot/history?offset=0&limit=25",
 
           authHeaders
         );
 
-      setChatHistory(
-        historyRes.data
-      );
+      setChatHistory(historyRes.data.chats || []);
+      setHistoryOffset(historyRes.data.offset || 0);
+      setHistoryHasMore(Boolean(historyRes.data.hasMore));
 
     } catch (error) {
 
@@ -188,7 +198,7 @@ export default function Chatbot() {
           role: "assistant",
 
           content:
-            "Something went wrong. Please try again.",
+            t("Something went wrong. Please try again."),
         },
       ]);
 
@@ -254,27 +264,48 @@ export default function Chatbot() {
             role: "assistant",
 
             content:
-              "# Hello 👋\nI am **AgriSense AI**. Ask me anything about crops, diseases, fertilizers, irrigation, or farming.",
+              t("# Hello 👋\nI am **AgriSense AI**. Ask me anything about crops, diseases, fertilizers, irrigation, or farming."),
           },
         ]);
 
         const historyRes =
           await api.get(
 
-            "/chatbot/history",
+            "/chatbot/history?offset=0&limit=25",
 
             authHeaders
           );
 
-        setChatHistory(
-          historyRes.data
-        );
+        setChatHistory(historyRes.data.chats || []);
+        setHistoryOffset(historyRes.data.offset || 0);
+        setHistoryHasMore(Boolean(historyRes.data.hasMore));
 
       } catch (error) {
 
         console.error(error);
       }
     };
+
+  // ENTER TO SEND
+
+  const loadMoreHistory = async () => {
+    if (historyLoading || !historyHasMore) return;
+    const nextOffset = historyOffset + 25;
+    setHistoryLoading(true);
+    try {
+      const response = await api.get(
+        `/chatbot/history?offset=${nextOffset}&limit=25`,
+        authHeaders
+      );
+      setChatHistory((current) => [...current, ...(response.data.chats || [])]);
+      setHistoryOffset(response.data.offset || nextOffset);
+      setHistoryHasMore(Boolean(response.data.hasMore));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   // ENTER TO SEND
 
@@ -295,17 +326,20 @@ export default function Chatbot() {
 
   return (
 
-    <div className="h-full flex gap-6">
+    <div className="flex min-h-[calc(100dvh-150px)] flex-col gap-4 lg:h-full lg:min-h-0 lg:flex-row lg:gap-6">
 
       {/* CHAT SECTION */}
 
       <div
         className="
+        order-1
+        min-h-[460px]
+        lg:min-h-0
         flex-1
         bg-[#051a14]
         border
-        border-green-900
         rounded-2xl
+        border-white/[0.07]
         flex
         flex-col
         overflow-hidden
@@ -557,7 +591,7 @@ export default function Chatbot() {
                   "
                 >
 
-                  Thinking...
+                  {t("Thinking...")}
 
                 </div>
 
@@ -600,7 +634,7 @@ export default function Chatbot() {
                 setMessage(e.target.value)
               }
               onKeyDown={handleKeyDown}
-              placeholder="Ask anything about farming..."
+              placeholder={t("Ask anything about farming...")}
               rows={1}
               className="
               flex-1
@@ -646,14 +680,15 @@ export default function Chatbot() {
 
       <div
         className="
-        w-[320px]
+        order-2
+        w-full
+        lg:w-[320px]
         bg-[#051a14]
         border
         border-green-900
         rounded-2xl
         p-5
-        hidden
-        lg:flex
+        flex
         flex-col
         "
       >
@@ -679,12 +714,12 @@ export default function Chatbot() {
 
           <Plus size={18} />
 
-          New Chat
+          {t("New Chat")}
 
         </button>
 
         <h2 className="text-xl font-semibold mb-5">
-          Chat History
+          {t("Chat History")}
         </h2>
 
         <div className="space-y-3 overflow-y-auto">
@@ -731,10 +766,7 @@ export default function Chatbot() {
 
                       <p className="text-xs text-gray-500 mt-1">
 
-                        {
-                          chat.messages
-                            ?.length || 0
-                        }{" "}
+                        {chat.messageCount || 0}{" "}
                         messages
 
                       </p>
@@ -745,8 +777,19 @@ export default function Chatbot() {
 
                 </div>
               )
-            )
+          )
           }
+
+          {historyHasMore && (
+            <button
+              type="button"
+              onClick={loadMoreHistory}
+              disabled={historyLoading}
+              className="w-full rounded-xl border border-green-900 px-4 py-3 text-sm text-green-200 hover:bg-green-950 disabled:opacity-50"
+            >
+              {historyLoading ? t("Loading…") : t("Load older chats")}
+            </button>
+          )}
 
         </div>
 

@@ -1,6 +1,7 @@
 const {
   analyzeCropImage,
 } = require("../services/cropAnalysisService");
+const { normalizeResponseLanguage } = require("../utils/responseLanguage");
 
 exports.analyzeVision =
   async (req, res) => {
@@ -15,7 +16,8 @@ exports.analyzeVision =
         await analyzeCropImage(
           req.file,
           "crop",
-          req.body.question
+          req.body.question,
+          normalizeResponseLanguage(req.body.language)
         );
 
       if (result.status === "Analysis Failed") {

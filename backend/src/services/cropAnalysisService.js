@@ -6,7 +6,8 @@ const {
 async function analyzeCropImage(
   file,
   analysisType = "crop",
-  question = ""
+  question = "",
+  language = "English"
 ) {
   try {
 
@@ -47,6 +48,7 @@ async function analyzeCropImage(
 
     const prompt = `
 You are an advanced agriculture AI assistant.
+Write every string value in ${language}, using its normal script. Keep the JSON property names exactly as specified. Do not copy English placeholder text into the values. Translate the severity label into the requested language; the severity meaning must remain low, medium, or high. Keep numbers numeric and return valid JSON only.
 
 Analyze the uploaded image carefully.
 
@@ -66,17 +68,17 @@ Your task:
 Return ONLY valid JSON.
 
 {
-  "type":"Crop Type",
-  "status":"Disease Name or Healthy",
-  "severity":"Low | Medium | High",
+  "type":"",
+  "status":"",
+  "severity":"",
   "confidence":0.95,
-  "issues":"Short issue summary",
+  "issues":"",
 
   "recommendations":[
-    "recommendation 1",
-    "recommendation 2",
-    "recommendation 3",
-    "recommendation 4"
+    "",
+    "",
+    "",
+    ""
   ]
 }
 `;
@@ -123,32 +125,43 @@ Return ONLY valid JSON.
     const result =
       JSON.parse(text);
 
+    if (!result || typeof result !== "object" || Array.isArray(result)) {
+      throw new Error("The analysis provider returned an invalid response.");
+    }
+
+    const confidenceValue = typeof result.confidence === "number"
+      ? result.confidence
+      : Number.NaN;
+    const recommendations = Array.isArray(result.recommendations)
+      ? result.recommendations
+        .filter((item) => typeof item === "string" && item.trim())
+        .map((item) => item.trim())
+        .slice(0, 8)
+      : [];
+    const issueText = Array.isArray(result.issues)
+      ? result.issues.filter((item) => typeof item === "string").join("; ")
+      : typeof result.issues === "string"
+        ? result.issues.trim()
+        : "";
+    const safeText = (value, fallback) =>
+      typeof value === "string" && value.trim() ? value.trim() : fallback;
+
     return {
-      type:
-        result.type ||
-        "Unknown Crop",
+      type: safeText(result.type, "Unknown Crop"),
 
-      status:
-        result.status ||
-        "Unknown",
+      status: safeText(result.status, "Unknown"),
 
-      severity:
-        result.severity ||
-        "Medium",
+      severity: safeText(result.severity, "Unknown"),
 
-      confidence:
-        result.confidence ??
-        0.75,
+      confidence: Number.isFinite(confidenceValue)
+        ? Math.min(1, Math.max(0, confidenceValue))
+        : 0.75,
 
-      issues:
-        result.issues ||
-        "No issues detected",
+      issues: issueText || "No issues detected",
 
-      recommendations:
-        result.recommendations ||
-        [
-          "Monitor crop condition regularly",
-        ],
+      recommendations: recommendations.length > 0
+        ? recommendations
+        : ["Monitor crop condition regularly"],
     };
 
   } catch (error) {

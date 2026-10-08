@@ -10,6 +10,8 @@ const weatherRoutes = require("./routes/weatherRoutes");
 const almanacRoutes = require("./routes/almanacRoutes");
 const visionRoutes = require("./routes/visionRoutes");
 const authRoutes = require("./routes/authRoutes");
+const marketRoutes = require("./routes/marketRoutes");
+const schemeRoutes = require("./routes/schemeRoutes");
 
 const app = express();
 
@@ -28,6 +30,8 @@ app.use("/weather", weatherRoutes);
 app.use("/almanac", almanacRoutes);
 app.use("/vision", visionRoutes);
 app.use("/auth", authRoutes);
+app.use("/market", marketRoutes);
+app.use("/schemes", schemeRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "AgriSense AI Backend Running" });
