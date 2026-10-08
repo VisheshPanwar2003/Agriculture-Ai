@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../services/api";
 
 import {
@@ -18,21 +18,39 @@ export default function ImageAnalysis() {
   const [loading, setLoading] = useState(false);
 
   const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
 
   const [analysisType, setAnalysisType] =
     useState("crop");
 
+  useEffect(() => () => {
+    if (image) URL.revokeObjectURL(image);
+  }, [image]);
+
   // IMAGE UPLOAD
   const handleImageUpload = (e) => {
 
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (file) {
-
-      setImage(URL.createObjectURL(file));
-
-      setImageFile(file);
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Choose a JPG, PNG, or WEBP image.");
+      e.target.value = "";
+      return;
     }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Image size must be 10 MB or less.");
+      e.target.value = "";
+      return;
+    }
+
+    setError("");
+    setResult(null);
+    setImage(URL.createObjectURL(file));
+    setImageFile(file);
+
   };
 
   // ANALYZE IMAGE
@@ -47,24 +65,19 @@ export default function ImageAnalysis() {
       const formData = new FormData();
 
       formData.append("file", imageFile);
+      formData.append("analysisType", analysisType);
 
       const response = await api.post(
-          "/analysis/predict",
+        "/analysis/predict",
         formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
       );
 
       setResult(response.data);
-
-      console.log(response.data);
+      setError("");
 
     } catch (error) {
 
-      console.error(error);
+      setError(error.response?.data?.error || "Unable to analyze this image.");
 
     } finally {
 
@@ -265,10 +278,13 @@ export default function ImageAnalysis() {
 
             <input
               type="file"
+              accept="image/jpeg,image/png,image/webp"
               className="hidden"
               onChange={handleImageUpload}
             />
           </label>
+
+          {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
         </div>
 
         {/* BUTTON */}

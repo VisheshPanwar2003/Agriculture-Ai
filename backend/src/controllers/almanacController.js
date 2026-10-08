@@ -26,16 +26,16 @@ exports.getSeasonalGuide = (
   );
 };
 
-exports.getCropAIData = (
+exports.getCropAIData = async (
   req,
   res
 ) => {
   const { crop_name } =
     req.params;
 
-  res.json(
-    almanac.getCropAIData(
-      crop_name
-    )
+  const cropData = await almanac.getCropAIData(
+    crop_name
   );
+
+  res.json(cropData);
 };

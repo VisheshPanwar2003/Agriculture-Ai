@@ -48,7 +48,7 @@ class WeatherService {
           .description,
 
       wind_speed:
-        data.wind.speed,
+        Math.round(data.wind.speed * 3.6 * 10) / 10,
 
       timestamp:
         new Date(),

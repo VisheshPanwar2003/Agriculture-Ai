@@ -21,6 +21,7 @@ router.post(
 
 router.post(
   "/chat",
+  authMiddleware,
   chat
 );
 
@@ -32,6 +33,7 @@ router.get(
 
 router.get(
   "/:chat_id",
+  authMiddleware,
   getChat
 );
 

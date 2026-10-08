@@ -12,11 +12,27 @@ exports.signup =
 
     try {
 
-      const {
-        name,
-        email,
-        password,
-      } = req.body;
+      const name = typeof req.body?.name === "string"
+        ? req.body.name.trim()
+        : "";
+      const email = typeof req.body?.email === "string"
+        ? req.body.email.trim().toLowerCase()
+        : "";
+      const password = typeof req.body?.password === "string"
+        ? req.body.password
+        : "";
+
+      if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !password) {
+        return res.status(400).json({
+          detail: "Name, a valid email, and password are required",
+        });
+      }
+
+      if (!process.env.JWT_SECRET) {
+        return res.status(500).json({
+          detail: "Authentication is not configured",
+        });
+      }
 
       const existingUser =
         await User.findOne({
@@ -24,7 +40,7 @@ exports.signup =
         });
 
       if (existingUser) {
-        return res.status(400).json({
+        return res.status(409).json({
           detail:
             "Email already exists",
         });
@@ -71,10 +87,13 @@ exports.signup =
 
     } catch (err) {
 
-      res.status(500).json({
-        error:
-          err.message,
-      });
+      if (err.code === 11000) {
+        return res.status(409).json({
+          detail: "Email already exists",
+        });
+      }
+
+      res.status(500).json({ error: "Unable to create account" });
     }
   };
 
@@ -83,10 +102,24 @@ exports.login =
 
     try {
 
-      const {
-        email,
-        password,
-      } = req.body;
+      const email = typeof req.body?.email === "string"
+        ? req.body.email.trim().toLowerCase()
+        : "";
+      const password = typeof req.body?.password === "string"
+        ? req.body.password
+        : "";
+
+      if (!email || !password) {
+        return res.status(400).json({
+          detail: "Email and password are required",
+        });
+      }
+
+      if (!process.env.JWT_SECRET) {
+        return res.status(500).json({
+          detail: "Authentication is not configured",
+        });
+      }
 
       const user =
         await User.findOne({
@@ -140,9 +173,7 @@ exports.login =
 
     } catch (err) {
 
-      res.status(500).json({
-        error:
-          err.message,
-      });
+      console.error("Login error:", err.message);
+      res.status(500).json({ error: "Unable to log in" });
     }
   };

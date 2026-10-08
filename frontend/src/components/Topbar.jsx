@@ -18,9 +18,12 @@ export default function Topbar() {
     useLocation();
 
   // GET USER
-  const user = JSON.parse(
-    localStorage.getItem("user")
-  );
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    localStorage.removeItem("user");
+  }
 
   // PAGE CONFIG
   const pageConfig = {

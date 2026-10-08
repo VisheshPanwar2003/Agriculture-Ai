@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import api from "../services/api";
 
@@ -26,7 +26,7 @@ export default function FarmerAlmanac() {
     useState(null);
 
   const [selectedCrop, setSelectedCrop] =
-    useState("Tomato");
+    useState("Rice");
 
   const [region, setRegion] =
     useState("North India");
@@ -37,49 +37,47 @@ export default function FarmerAlmanac() {
   const [harvestDate, setHarvestDate] =
     useState("");
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
 
-  // FETCH DATA
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
+    const [dailyRes, seasonalRes, cropRes] = await Promise.all([
+      api.get("/almanac/daily"),
+      api.get(`/almanac/seasonal/${encodeURIComponent(region)}`),
+      api.get(`/almanac/crop-ai/${encodeURIComponent(selectedCrop)}`),
+    ]);
 
-    fetchData();
-
+    return {
+      daily: dailyRes.data,
+      seasonal: seasonalRes.data,
+      crop: cropRes.data,
+    };
   }, [region, selectedCrop]);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    let active = true;
 
-    try {
+    fetchData()
+      .then(({ daily: nextDaily, seasonal: nextSeasonal, crop }) => {
+        if (active) {
+          setDaily(nextDaily);
+          setSeasonal(nextSeasonal);
+          setCropData(crop);
+          setFetchError("");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        if (active) setFetchError("Unable to load almanac data. Try again later.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
 
-      setLoading(true);
-
-      const dailyRes = await api.get(
-        "/almanac/daily"
-      );
-
-      const seasonalRes = await api.get(
-        `/almanac/seasonal/${region}`
-      );
-
-      const cropRes = await api.get(
-        `/almanac/crop-ai/${selectedCrop}`
-      );
-
-      setDaily(dailyRes.data);
-
-      setSeasonal(seasonalRes.data);
-
-      setCropData(cropRes.data);
-
-    } catch (error) {
-
-      console.error(error);
-
-    } finally {
-
-      setLoading(false);
-    }
-  };
+    return () => {
+      active = false;
+    };
+  }, [fetchData]);
 
   // HARVEST CALCULATOR
   const calculateHarvest = () => {
@@ -88,7 +86,7 @@ export default function FarmerAlmanac() {
 
     const harvestDays =
       cropData?.crop_data
-        ?.harvest_days || 75;
+        ?.days_to_maturity || 75;
 
     const date = new Date(
       plantingDate
@@ -107,6 +105,12 @@ export default function FarmerAlmanac() {
     <div className="h-full overflow-y-auto pr-2">
 
       <div className="space-y-6">
+
+        {fetchError && (
+          <p role="alert" className="rounded-xl border border-red-700 bg-red-900/20 p-4 text-red-300">
+            {fetchError}
+          </p>
+        )}
 
         {/* LOADING */}
         {
@@ -364,9 +368,10 @@ export default function FarmerAlmanac() {
               <select
                 value={selectedCrop}
                 onChange={(e) =>
-                  setSelectedCrop(
-                    e.target.value
-                  )
+                  {
+                    setLoading(true);
+                    setSelectedCrop(e.target.value);
+                  }
                 }
                 className="
                 w-full
@@ -379,8 +384,7 @@ export default function FarmerAlmanac() {
                 outline-none
                 "
               >
-                <option>Tomato</option>
-                <option>Potato</option>
+                <option>Wheat</option>
                 <option>Rice</option>
               </select>
 
@@ -599,11 +603,10 @@ export default function FarmerAlmanac() {
 
               <select
                 value={region}
-                onChange={(e) =>
-                  setRegion(
-                    e.target.value
-                  )
-                }
+                onChange={(e) => {
+                  setLoading(true);
+                  setRegion(e.target.value);
+                }}
                 className="
                 w-full
                 bg-[#08251c]
@@ -734,11 +737,10 @@ export default function FarmerAlmanac() {
 
               <select
                 value={selectedCrop}
-                onChange={(e) =>
-                  setSelectedCrop(
-                    e.target.value
-                  )
-                }
+                onChange={(e) => {
+                  setLoading(true);
+                  setSelectedCrop(e.target.value);
+                }}
                 className="
                 w-full
                 bg-[#08251c]
@@ -750,8 +752,7 @@ export default function FarmerAlmanac() {
                 outline-none
                 "
               >
-                <option>Tomato</option>
-                <option>Potato</option>
+                <option>Wheat</option>
                 <option>Rice</option>
               </select>
             </div>

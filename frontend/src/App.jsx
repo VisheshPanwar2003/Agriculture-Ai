@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import {
   Routes,
   Route,
@@ -6,20 +7,20 @@ import {
 
 import MainLayout from "./layout/MainLayout";
 
-import ImageAnalysis from "./pages/ImageAnalysis";
-import Chatbot from "./pages/Chatbot";
-import VisionAnalysis from "./pages/Vision";
-import Almanac from "./pages/Almanac";
-
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-
 import ProtectedRoute from "./components/ProtectedRoute";
+
+const ImageAnalysis = lazy(() => import("./pages/ImageAnalysis"));
+const Chatbot = lazy(() => import("./pages/Chatbot"));
+const VisionAnalysis = lazy(() => import("./pages/Vision"));
+const Almanac = lazy(() => import("./pages/Almanac"));
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
 
 function App() {
 
   return (
 
+    <Suspense fallback={<div className="p-6 text-green-400">Loading…</div>}>
     <Routes>
 
       {/* PUBLIC ROUTES */}
@@ -80,6 +81,7 @@ function App() {
       />
 
     </Routes>
+    </Suspense>
   );
 }
 

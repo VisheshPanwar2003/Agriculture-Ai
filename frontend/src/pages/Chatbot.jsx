@@ -1,16 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 
 import api from "../services/api";
 
 import ReactMarkdown from "react-markdown";
-
-import {
-  Prism as SyntaxHighlighter
-} from "react-syntax-highlighter";
-
-import {
-  oneDark
-} from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import {
   Send,
@@ -49,14 +41,14 @@ export default function Chatbot() {
 
   // AUTH HEADERS
 
-  const authHeaders = {
+  const authHeaders = useMemo(() => ({
 
     headers: {
 
       Authorization:
         `Bearer ${token}`
     }
-  };
+  }), [token]);
 
   // AUTO SCROLL
 
@@ -68,64 +60,38 @@ export default function Chatbot() {
 
   }, [messages]);
 
-  // INITIALIZE CHAT
-
-  useEffect(() => {
-
-    initializeChat();
-
-  }, []);
-
   // CREATE CHAT + LOAD HISTORY
 
-  const initializeChat = async () => {
+  const initializeChat = useCallback(async () => {
+    const historyRes = await api.get(
+      "/chatbot/history",
+      authHeaders
+    );
+    return historyRes.data;
+  }, [authHeaders]);
 
-    try {
+  // INITIALIZE CHAT
+  useEffect(() => {
+    let active = true;
+    initializeChat()
+      .then((history) => {
+        if (!active) return;
+        setChatHistory(history);
+        setChatId(null);
+        setMessages([
+          {
+            role: "assistant",
+            content:
+              "# Hello 👋\nI am **AgriSense AI**. Ask me anything about crops, diseases, fertilizers, irrigation, or farming.",
+          },
+        ]);
+      })
+      .catch((error) => console.error(error));
 
-      // LOAD HISTORY
-
-      const historyRes =
-        await api.get(
-
-          "/chatbot/history",
-
-          authHeaders
-        );
-
-      setChatHistory(
-        historyRes.data
-      );
-
-      // CREATE NEW CHAT
-
-      const newChatRes =
-        await api.post(
-
-          "/chatbot/new",
-
-          {},
-
-          authHeaders
-        );
-
-      setChatId(
-        newChatRes.data.chat_id
-      );
-
-      setMessages([
-        {
-          role: "assistant",
-
-          content:
-            "# Hello 👋\nI am **AgriSense AI**. Ask me anything about crops, diseases, fertilizers, irrigation, or farming.",
-        },
-      ]);
-
-    } catch (error) {
-
-      console.error(error);
-    }
-  };
+    return () => {
+      active = false;
+    };
+  }, [initializeChat]);
 
   // SEND MESSAGE
 
@@ -133,7 +99,7 @@ export default function Chatbot() {
 
     if (
       !message.trim() ||
-      !chatId
+      loading
     ) return;
 
     const userMessage = {
@@ -159,6 +125,17 @@ export default function Chatbot() {
 
       setLoading(true);
 
+      let activeChatId = chatId;
+      if (!activeChatId) {
+        const newChatRes = await api.post(
+          "/chatbot/new",
+          {},
+          authHeaders
+        );
+        activeChatId = newChatRes.data.chat_id;
+        setChatId(activeChatId);
+      }
+
       const response =
         await api.post(
 
@@ -166,7 +143,7 @@ export default function Chatbot() {
 
           {
 
-            chat_id: chatId,
+            chat_id: activeChatId,
 
             message:
               currentMessage,
@@ -413,51 +390,14 @@ export default function Chatbot() {
 
                         components={{
 
-                          code({
-                            inline,
-                            className,
-                            children,
-                            ...props
-                          }) {
-
-                            const match =
-                              /language-(\w+)/.exec(
-                                className || ""
-                              );
-
-                            return !inline && match ? (
-
-                              <SyntaxHighlighter
-                                style={oneDark}
-                                language={match[1]}
-                                PreTag="div"
-                                {...props}
-                              >
-
-                                {
-                                  String(children)
-                                  .replace(/\n$/, "")
-                                }
-
-                              </SyntaxHighlighter>
-
-                            ) : (
-
+                          code({ className, children, ...props }) {
+                            return (
                               <code
-                                className="
-                                bg-black/40
-                                px-2
-                                py-1
-                                rounded
-                                text-green-300
-                                "
+                                className={`${className || ""} bg-black/40 px-2 py-1 rounded text-green-300`}
                                 {...props}
                               >
-
                                 {children}
-
                               </code>
-
                             );
                           },
 

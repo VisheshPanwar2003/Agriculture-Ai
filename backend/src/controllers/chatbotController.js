@@ -31,19 +31,40 @@ exports.chat =
       message,
     } = req.body;
 
-    await saveMessage(
+    if (typeof message !== "string" || !message.trim() || message.length > 4000) {
+      return res.status(400).json({
+        detail: "Message must contain 1 to 4000 characters",
+      });
+    }
+
+    if (typeof chat_id !== "string" || !/^[a-f\d]{24}$/i.test(chat_id)) {
+      return res.status(400).json({
+        detail: "A valid chat ID is required",
+      });
+    }
+
+    const chat = await saveMessage(
       chat_id,
+      req.user.user_id,
       "user",
       message
     );
 
+    if (!chat) {
+      return res.status(404).json({
+        detail: "Chat not found",
+      });
+    }
+
     const response =
       await chatbot.chat(
-        message
+        message,
+        chat.messages
       );
 
     await saveMessage(
       chat_id,
+      req.user.user_id,
       "assistant",
       response
     );
@@ -67,10 +88,23 @@ exports.history =
 exports.getChat =
   async (req, res) => {
 
+    if (!/^[a-f\d]{24}$/i.test(req.params.chat_id)) {
+      return res.status(400).json({
+        detail: "A valid chat ID is required",
+      });
+    }
+
     const chat =
       await getChatById(
-        req.params.chat_id
+        req.params.chat_id,
+        req.user.user_id
       );
+
+    if (!chat) {
+      return res.status(404).json({
+        detail: "Chat not found",
+      });
+    }
 
     res.json(chat);
   };

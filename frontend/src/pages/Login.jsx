@@ -64,6 +64,10 @@ export default function Login() {
 
       setError(
         error.response?.data?.detail ||
+        error.response?.data?.error ||
+        (error.request
+          ? "Could not reach the server. Check that the backend is running and try again."
+          : error.message) ||
         "Login failed"
       );
 

@@ -1,20 +1,17 @@
 const express = require("express");
-const multer = require("multer");
 
 const {
   predictCrop,
 } = require("../controllers/analysisController");
+const authMiddleware = require("../middleware/authMiddleware");
+const imageUpload = require("../middleware/imageUpload");
 
 const router = express.Router();
 
-const upload = multer({
-  storage:
-    multer.memoryStorage(),
-});
-
 router.post(
   "/predict",
-  upload.single("file"),
+  authMiddleware,
+  imageUpload,
   predictCrop
 );
 

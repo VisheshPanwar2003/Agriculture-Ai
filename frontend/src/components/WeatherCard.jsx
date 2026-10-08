@@ -8,7 +8,7 @@ import {
   Loader2,
 } from "lucide-react";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import api from "../services/api";
 
@@ -19,48 +19,38 @@ export default function WeatherCard({
   const [weather, setWeather] =
     useState(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loadedCity, setLoadedCity] = useState(null);
+  const [error, setError] = useState(null);
+  const loading = loadedCity !== city && error?.city !== city;
 
-  const [error, setError] =
-    useState("");
-
-  useEffect(() => {
-
-    fetchWeather();
-
+  const fetchWeather = useCallback(async () => {
+    const response = await api.get(`/weather/${encodeURIComponent(city)}`);
+    return response.data;
   }, [city]);
 
-  const fetchWeather = async () => {
+  useEffect(() => {
+    let active = true;
 
-    try {
+    fetchWeather()
+      .then((data) => {
+        if (active) {
+          setWeather(data);
+          setLoadedCity(city);
+          setError(null);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setError({ city, message: "Unable to load weather" });
+        }
+      });
 
-      setLoading(true);
+    return () => {
+      active = false;
+    };
+  }, [city, fetchWeather]);
 
-      const response = await api.get(
-        `/weather/${city}`
-      );
-
-      console.log(
-        "Weather Response:",
-        response.data
-      );
-
-      setWeather(response.data);
-
-    } catch (err) {
-
-      console.log(err);
-
-      setError("Unable to load weather");
-
-    } finally {
-
-      setLoading(false);
-    }
-
-
-  };
+  const currentError = error?.city === city ? error.message : "";
 
   // WEATHER ICON
   const getWeatherIcon = () => {
@@ -158,10 +148,10 @@ export default function WeatherCard({
             />
           </div>
 
-        ) : error ? (
+        ) : currentError ? (
 
           <div className="text-red-400 text-sm">
-            {error}
+            {currentError}
           </div>
 
         ) : (

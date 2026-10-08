@@ -27,18 +27,20 @@ export default function VisionAnalysis() {
 
   // IMAGE UPLOAD
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     const allowed = ["image/jpeg", "image/png", "image/webp"];
 
     if (!allowed.includes(file.type)) {
-      alert("Only JPG PNG WEBP allowed");
+      alert("Only JPG, PNG, and WEBP images are allowed.");
+      e.target.value = "";
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      alert("Max size 10MB");
+      alert("Image size must be 10 MB or less.");
+      e.target.value = "";
       return;
     }
 
@@ -75,7 +77,7 @@ export default function VisionAnalysis() {
         ...prev,
         {
           role: "assistant",
-          analysis: response.data.response,
+          analysis: response.data,
         },
       ]);
 
@@ -88,7 +90,7 @@ export default function VisionAnalysis() {
         {
           role: "assistant",
           content:
-            "Something went wrong while analyzing the image.",
+            error.response?.data?.error || "Something went wrong while analyzing the image.",
         },
       ]);
     } finally {
@@ -125,7 +127,7 @@ export default function VisionAnalysis() {
 
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp"
                 className="hidden"
                 onChange={handleImageUpload}
               />
@@ -201,14 +203,14 @@ export default function VisionAnalysis() {
                               <h3 className="text-green-400 font-semibold">
                                 🌱 Crop Name
                               </h3>
-                              <p>{msg.analysis.crop_name}</p>
+                              <p>{msg.analysis.type}</p>
                             </div>
 
                             <div className="bg-[#0b2d22] p-4 rounded-xl">
                               <h3 className="text-green-400 font-semibold">
                                 📊 Health Status
                               </h3>
-                              <p>{msg.analysis.health_status}</p>
+                              <p>{msg.analysis.status}</p>
                             </div>
                           </div>
 
@@ -216,7 +218,7 @@ export default function VisionAnalysis() {
                             <h3 className="text-green-400 font-semibold">
                               🦠 Disease Detected
                             </h3>
-                            <p>{msg.analysis.disease_detected}</p>
+                            <p>{msg.analysis.issues}</p>
                           </div>
 
                           <div className="bg-[#0b2d22] p-4 rounded-xl">
@@ -244,9 +246,9 @@ export default function VisionAnalysis() {
 
                           <div className="bg-[#0b2d22] p-4 rounded-xl">
                             <h3 className="text-green-400 font-semibold">
-                              📝 Summary
+                              🎯 Confidence
                             </h3>
-                            <p>{msg.analysis.summary}</p>
+                            <p>{Math.round(msg.analysis.confidence * 100)}%</p>
                           </div>
 
                         </div>

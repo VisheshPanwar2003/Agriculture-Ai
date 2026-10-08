@@ -16,15 +16,15 @@ AgriSense AI is a full-stack, AI-powered platform that helps farmers make inform
 
 ## 📸 Screenshots
 
-<!-- Replace these with real screenshots. Put images in a /docs folder in the repo. -->
+<!-- Screenshots are stored in the Docs folder. -->
 
 | Crop Disease Analysis | AI Chatbot |
 | --- | --- |
-| ![Disease analysis](docs/screenshot-vision.png) | ![Chatbot](docs/screenshot-chat.png) |
+| ![Disease analysis](Docs/screenshot-vision.png) | ![Chatbot](Docs/screenshot-chat.png) |
 
 | Weather Insights | Dashboard |
 | --- | --- |
-| ![Weather](docs/screenshot-weather.png) | ![Dashboard](docs/screenshot-dashboard.png) |
+| ![Weather](Docs/screenshot-weather.png) | ![Dashboard](Docs/screenshot-dashboard.png) |
 
 ---
 
@@ -87,7 +87,7 @@ flowchart LR
     U[User / Browser] --> F[React + Vite Frontend]
     F -->|REST + JWT| B[Express API]
     B --> M[(MongoDB)]
-    B -->|Images: Multer + Sharp| G[Gemini 2.5 Flash]
+    B -->|Validated images and prompts| G[Gemini 2.5 Flash]
     B -->|Prompts| G
     B --> W[Weather API]
 ```
@@ -101,8 +101,8 @@ flowchart LR
 | Layer | Technologies |
 | --- | --- |
 | **Frontend** | React.js, Vite, Tailwind CSS, Axios, React Router DOM, Framer Motion |
-| **Backend** | Node.js, Express.js, MongoDB, Mongoose, JWT, Express Validator, Multer, CORS, Dotenv |
-| **AI** | Google Gemini 2.5 Flash, Google GenAI SDK, Sharp (image processing) |
+| **Backend** | Node.js, Express.js, MongoDB, Mongoose, JWT, Multer, CORS, Dotenv |
+| **AI** | Google Gemini 2.5 Flash, Google GenAI SDK |
 | **Deployment** | Vercel (frontend and backend), GitHub |
 
 ---
@@ -141,7 +141,7 @@ Agriculture-Ai/
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20.19+ or 22.12+
 - A MongoDB database (local or [MongoDB Atlas](https://www.mongodb.com/atlas))
 - A [Gemini API key](https://aistudio.google.com/)
 - A weather API key
@@ -164,7 +164,7 @@ cp .env.example .env
 Open `.env` and fill in your values:
 
 ```env
-PORT=5000
+PORT=8000
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=replace_with_a_long_random_string
 GEMINI_API_KEY=your_gemini_api_key
@@ -181,7 +181,7 @@ npm run dev
 npm start
 ```
 
-Backend runs at `http://localhost:5000`.
+Backend runs at `http://localhost:8000`.
 
 ### 3. Set up the frontend
 
@@ -192,6 +192,9 @@ npm run dev
 ```
 
 Frontend runs at `http://localhost:5173`.
+The frontend uses `http://localhost:8000` as its local API default. To override it locally, copy `frontend/.env.example` to `frontend/.env` and set `VITE_API_URL`.
+
+For Vercel deployment, set `VITE_API_URL` in the frontend project's Environment Variables to the public base URL of the deployed backend (for example, `https://your-backend.example.com`). Redeploy the frontend after changing this value. The production frontend will show a configuration error instead of sending API requests to `localhost` if this variable is missing.
 
 ---
 
@@ -199,23 +202,25 @@ Frontend runs at `http://localhost:5173`.
 
 | Method | Endpoint | Description | Auth |
 | --- | --- | --- | --- |
-| POST | `/api/auth/register` | Create a new account | No |
-| POST | `/api/auth/login` | Log in and receive a JWT | No |
-| GET | `/api/auth/profile` | Get the current user's profile | Yes |
-| POST | `/api/chatbot` | Ask the agriculture chatbot | Yes |
-| POST | `/api/vision/analyze` | Upload a crop image for disease analysis | Yes |
-| GET | `/api/weather` | Get weather and farming insights | Yes |
-| GET | `/api/almanac` | Get seasonal farming guidance | Yes |
-| POST | `/api/analysis` | Run AI-generated crop analysis | Yes |
-
-<!-- Update the "Auth" column to match which routes actually require a token in your code. -->
+| POST | `/auth/signup` | Create an account | No |
+| POST | `/auth/login` | Log in and receive a JWT | No |
+| POST | `/chatbot/new` | Create a chat | Yes |
+| POST | `/chatbot/chat` | Send a message to a chat | Yes |
+| GET | `/chatbot/history` | List the current user's chats | Yes |
+| GET | `/chatbot/:chat_id` | Read one of the current user's chats | Yes |
+| POST | `/vision/analyze` | Analyze an uploaded image and optional question | Yes |
+| POST | `/analysis/predict` | Analyze an uploaded crop image | Yes |
+| GET | `/weather/:city` | Get weather for a city | Yes |
+| GET | `/almanac/daily` | Get today's almanac | Yes |
+| GET | `/almanac/seasonal/:region` | Get seasonal farming guidance | Yes |
+| GET | `/almanac/crop-ai/:crop_name` | Get crop data and AI insights | Yes |
 
 ---
 
 ## 📸 Vision AI Workflow
 
 1. The user uploads a crop image.
-2. The image is received with **Multer** and processed with **Sharp**.
+2. The image is received and size/type checked with **Multer**.
 3. **Gemini Vision** analyzes the image.
 4. The model identifies diseases and plant health issues.
 5. A severity assessment is generated.

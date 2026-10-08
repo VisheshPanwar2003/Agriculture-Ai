@@ -16,12 +16,16 @@ exports.createChat =
 exports.saveMessage =
   async (
     chatId,
+    userId,
     role,
     content
   ) => {
 
-    await Chat.findByIdAndUpdate(
-      chatId,
+    return Chat.findOneAndUpdate(
+      {
+        _id: chatId,
+        user_id: userId,
+      },
       {
         $push: {
           messages: {
@@ -53,10 +57,12 @@ exports.getChatHistory =
 
 exports.getChatById =
   async (
-    chatId
+    chatId,
+    userId
   ) => {
 
-    return Chat.findById(
-      chatId
-    );
+    return Chat.findOne({
+      _id: chatId,
+      user_id: userId,
+    });
   };

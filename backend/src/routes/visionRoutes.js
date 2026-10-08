@@ -1,19 +1,17 @@
 const express = require("express");
-const multer = require("multer");
 
 const {
   analyzeVision,
 } = require("../controllers/visionController");
+const authMiddleware = require("../middleware/authMiddleware");
+const imageUpload = require("../middleware/imageUpload");
 
 const router = express.Router();
 
-const upload = multer({
-  storage: multer.memoryStorage(),
-});
-
 router.post(
   "/analyze",
-  upload.single("file"),
+  authMiddleware,
+  imageUpload,
   analyzeVision
 );
 

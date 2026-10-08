@@ -12,7 +12,7 @@ module.exports = (
     const authHeader =
       req.headers.authorization;
 
-    if (!authHeader) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
 
       return res
         .status(401)
@@ -22,8 +22,12 @@ module.exports = (
         });
     }
 
-    const token =
-      authHeader.split(" ")[1];
+    const token = authHeader.slice(7).trim();
+    if (!token) {
+      return res.status(401).json({
+        detail: "Unauthorized",
+      });
+    }
 
     const decoded =
       jwt.verify(

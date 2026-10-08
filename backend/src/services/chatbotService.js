@@ -4,25 +4,13 @@ const {
   "./geminiService"
 );
 
-class AgricultureAssistant {
+async function chat(message, history = []) {
+  const conversation = history
+    .slice(-6)
+    .map(({ role, content }) => `${role === "assistant" ? "AI" : "User"}: ${content}`)
+    .join("\n");
 
-  constructor() {
-    this.history = [];
-  }
-
-  async chat(message) {
-
-    this.history.push(
-      `User: ${message}`
-    );
-
-    this.history =
-      this.history.slice(-6);
-
-    const conversation =
-      this.history.join("\n");
-
-    const prompt = `
+  const prompt = `
 You are AgriSense AI.
 
 You help farmers with:
@@ -45,18 +33,7 @@ Current User Message:
 ${message}
 `;
 
-    const response =
-      await generateResponse(
-        prompt
-      );
-
-    this.history.push(
-      `AI: ${response}`
-    );
-
-    return response;
-  }
+  return generateResponse(prompt);
 }
 
-module.exports =
-  new AgricultureAssistant();
+module.exports = { chat };

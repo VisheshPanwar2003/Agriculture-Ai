@@ -110,9 +110,21 @@ Return JSON:
           prompt
         );
 
+      const jsonText = response
+        .replace(/```json\s*/gi, "")
+        .replace(/```/g, "")
+        .trim();
+      const match = jsonText.match(/\{[\s\S]*\}/);
+      const aiData = JSON.parse(match ? match[0] : jsonText);
+
       return {
         crop_data: crop,
-        ai_data: response,
+        ai_data: {
+          summary: aiData.summary || "Farming insights are ready.",
+          recommendations: Array.isArray(aiData.recommendations)
+            ? aiData.recommendations
+            : [],
+        },
       };
 
     } catch {

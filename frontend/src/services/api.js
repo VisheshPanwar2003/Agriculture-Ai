@@ -1,16 +1,9 @@
 import axios from "axios";
 
-console.log(
-  "API URL:",
-  import.meta.env.VITE_API_URL
-);
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
 
 const api = axios.create({
-
-  baseURL:
-
-    import.meta.env.VITE_API_URL
-
+  baseURL: configuredApiUrl || (import.meta.env.DEV ? "http://localhost:8000" : ""),
 });
 
 
@@ -19,6 +12,12 @@ const api = axios.create({
 api.interceptors.request.use(
 
 (config)=>{
+
+if (import.meta.env.PROD && !configuredApiUrl) {
+  return Promise.reject(
+    new Error("VITE_API_URL must be set to the deployed backend URL.")
+  );
+}
 
 const token=
 
@@ -74,6 +73,8 @@ localStorage.removeItem(
 "token"
 
 );
+
+localStorage.removeItem("user");
 
 window.location.href=
 

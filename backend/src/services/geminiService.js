@@ -13,20 +13,12 @@ const ai =
 async function generateResponse(
   prompt
 ) {
-  try {
+  const response = await ai.models.generateContent({
+    model: MODEL_NAME,
+    contents: prompt,
+  });
 
-    const response =
-      await ai.models.generateContent({
-        model: MODEL_NAME,
-        contents: prompt,
-      });
-
-    return response.text;
-
-  } catch (error) {
-
-    return `Gemini Error: ${error.message}`;
-  }
+  return response.text;
 }
 
 module.exports = {
